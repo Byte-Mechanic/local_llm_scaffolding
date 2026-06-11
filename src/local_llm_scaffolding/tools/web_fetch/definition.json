@@ -1,0 +1,17 @@
+{
+        "type": "function",
+        "function": {
+                "name": "web_fetch",
+                "description": "ONLY read web pages if you need additional information that is not given from a web_search.",
+                "parameters": {
+                        "type": "object",
+                        "properties": {
+                                "url": {
+                                        "type": "string",
+                                        "description": "URL to the webpage you need to fetch."
+                                }
+                        },
+                        "required": ["url"]
+                }
+        }
+}

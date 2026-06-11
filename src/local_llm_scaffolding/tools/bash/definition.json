@@ -1,0 +1,18 @@
+{
+"type": "function",
+"function": {
+    "name": "bash",
+    "description": "Execute a shell command in a sandboxed workspace. Will be fed into a `subprocess.run()` in python, so the command needs to be a list with each space separating commands. All paths are relative to the workspace root. Use for: reading files (cat, head, grep), listing directories (ls, find), running code snippets to verify they execute (python3, node), text processing (sed, awk, diff, wc), and any inspection task where standard POSIX tools apply.\n\nCONSTRAINTS:\n- All file paths must be relative. Absolute paths and '..' traversal are rejected.\n- No network access. Use search_web for external lookups.\n- No package installation. The sandbox has python3, node, and standard coreutils.\n- No file deletion. Use str_replace or write operations to modify files.\n\nBEFORE EDITING ANY FILE: You MUST cat or head the file in the same turn to confirm its current contents. Edits based on assumed file contents will produce wrong results.\n\nFor code verification: Extract code blocks from the response being evaluated, write them to sandbox/tmp/, and execute. Report whether they run, throw, or produce unexpected output. Clean up sandbox/tmp/ after each evaluation.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "commands": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "argv-style command list. First element is the executable, subsequent elements are individual arguments."
+                }
+            },
+        "required": ["commands"]
+        }
+    }
+}

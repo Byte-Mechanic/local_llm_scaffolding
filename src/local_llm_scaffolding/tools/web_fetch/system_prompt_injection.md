@@ -1,0 +1,7 @@
+- Web_Fetch tool:
+    - Use to get the full markdown content of a specified webpage.
+    - Only fetch URL's that are given to you by the user, or are specified previously in the discussion.
+    - Do not try to 'remember' or generate URL's from your training data.
+    - Use cases include:
+        - Needing the FULL content of a webpage.
+        - If a previous page has a url that can serve the purpose of advancing the conversations objective

@@ -1,0 +1,12 @@
+**/__pycache__/
+**.log
+venv/
+dev/
+**/memory.md
+**/cfg.json
+**/llama/build/bin/*
+**/*.gguf
+**/*.BAK*
+**/*.egg
+**/*.egg-info
+**/.pytest-cache/

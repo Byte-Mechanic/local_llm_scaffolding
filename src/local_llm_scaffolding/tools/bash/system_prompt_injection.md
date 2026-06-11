@@ -1,0 +1,15 @@
+- Bash tool:
+    - The COMMANDS argument is an array of commands, not a shell command string.
+    - Dont execute anything that will result in a huge output or long execution.
+    - If you feel unsure about the length of an output, test it by using a flag to get the counts first.
+    - Everything is ran in a python `subprocess.run()` block, without the shell enabled, so keep that limitation in mind.
+    - Use this tool to execute any and all mathemetical calculations, even if they are easy.(Examples: ['python', '-c', 'from decimal import Decimal as D;print(D(2)+D(2.5))'], ['python', '-c', 'from decimal import Decimal as D;print((D(2.6)**D(11))/D(3)+D(12))'])
+    - When executing code in python, remember, your command list is being fed into python's subprocess.run() with the `shell = false` flag. format accordingly.
+    - also when executing python code, remember, it shoudl look like this: ["python", "-c", "YOUR CODE HERE"]. and separate lines with semicolons, and make 4 spaces for a single tab indentation.
+    - The operators you can use in python are:
+        - `+`: Addition
+        - `-`: Subtracton
+        - `*`: Multiplication
+        - `/`: Division
+        - `//`: Floor Division
+        - `**`: Exponentiation

@@ -1,0 +1,5 @@
+- Web_Search:
+    - use this tool to find any information on the following:
+        - Information needed to ground an answer.
+        - Information on topics or areas in which the information chages rapidly or become stale quickly, including but not limited to:
+            - New 

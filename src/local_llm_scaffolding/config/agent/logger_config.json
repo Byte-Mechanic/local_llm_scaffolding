@@ -1,0 +1,91 @@
+{
+        "version": 1,
+        "disable_existing_loggers": false,
+        "formatters": {
+                "file": {
+                        "format": "[%(asctime)s]-[%(levelname)s]-[%(name)s]: %(message)s",
+                        "datefmt": "%m/%d/%y - %H:%M"
+                },
+                "console": {
+                        "format": "[%(levelname)s]-[%(name)s]: %(message)s"
+                }
+        },
+        "handlers": {
+                "agent_file": {
+                        "class": "logging.handlers.RotatingFileHandler",
+                        "level": "INFO",
+                        "formatter": "file",
+                        "filename": "{PROJ_ROOT}/logs/agent_{SESSION}.log",
+                        "maxBytes": 1250000000,
+                        "backupCount": 3
+                },
+                "tool_file": {
+                        "class": "logging.handlers.RotatingFileHandler",
+                        "level": "INFO",
+                        "formatter": "file",
+                        "filename": "{PROJ_ROOT}/logs/tool_{SESSION}.log",
+                        "maxBytes": 1250000000,
+                        "backupCount": 3
+                },
+                "llama_file": {
+                        "class": "logging.handlers.RotatingFileHandler",
+                        "level": "INFO",
+                        "formatter": "file",
+                        "filename": "{PROJ_ROOT}/logs/llama_{SESSION}.log",
+                        "maxBytes": 1250000000,
+                        "backupCount": 3
+                },
+                "context_file": {
+                        "class": "logging.handlers.RotatingFileHandler",
+                        "level": "INFO",
+                        "formatter": "file",
+                        "filename": "{PROJ_ROOT}/logs/context_{SESSION}.log",
+                        "maxBytes": 1250000000,
+                        "backupCount": 3
+                },
+                "console": {
+                        "class": "logging.StreamHandler",
+                        "level": "WARNING",
+                        "formatter": "console"
+                }
+        },
+        "loggers": {
+                "local_llm_scaffolding.agent.core": {
+                        "level": "INFO",
+                        "handlers": ["console", "agent_file"]
+                },
+                "local_llm_scaffolding.tools.handler": {
+                        "level": "INFO",
+                        "handlers": ["console", "tool_file"]
+                },
+                "local_llm_scaffolding.tools.bash.tool": {
+                        "level": "INFO",
+                        "handlers": ["console", "tool_file"]
+                },
+                "local_llm_scaffolding.tools.web_fetch.tool": {
+                        "level": "INFO",
+                        "handlers": ["console", "tool_file"]
+                },
+                "local_llm_scaffolding.tools.web_search.tool": {
+                        "level": "INFO",
+                        "handlers": ["console", "tool_file"]
+                },
+                "local_llm_scaffolding.llama.interface": {
+                        "level": "INFO",
+                        "handlers": ["console", "llama_file"]
+                },
+                "local_llm_scaffolding.llama.manager": {
+                        "level": "INFO",
+                        "handlers": ["console", "llama_file"]
+                },
+                "local_llm_scaffolding.tools.utils": {
+                        "level": "INFO",
+                        "handlers": ["console", "tool_file"]
+                },
+                "local_llm_scaffolding.context.manager": {
+                        "level": "INFO",
+                        "handlers": ["console", "context_file"]
+                }
+
+        }
+}

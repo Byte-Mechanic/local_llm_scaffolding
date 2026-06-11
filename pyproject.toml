@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools >= 82.0.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "local-llm-scaffolding-Byte_Mechanic"
+version = "0.0.1"
+authors = [
+        {name = "Roger Parish", email = "roger.parish3@proton.me"},
+]
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE",]
+dependencies = [
+        "beautifulsoup4",
+        "brotli",
+        "certifi",
+        "charset-normalizer",
+        "fake-useragent",
+        "idna",
+        "iniconfig",
+        "markdownify",
+        "packaging",
+        "pluggy",
+        "Pygments",
+        "pytest",
+        "requests",
+        "setuptools",
+        "six",
+        "soupsieve",
+        "typing_extensions",
+        "urllib3",
+]
+
+[project.scripts]
+llm-scaffolding = "local_llm_scaffolding.main:run"
+
+[project.optional-dependencies]
+dev = ["pytest",]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+

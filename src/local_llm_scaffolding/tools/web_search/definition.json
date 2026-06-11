@@ -1,0 +1,21 @@
+{
+        "type": "function",
+        "function": {
+                "name": "web_search",
+                "description": "Search the web to verify a specific factual claim from the response being evaluated. Returns top results with snippets.\n\nUSE THIS WHEN: You encounter a specific, verifiable claim and you are not confident whether it is correct. Examples: API function names, library behavior, version-specific features, quantitative claims, historical/etymological claims.\n\nDO NOT USE FOR: Subjective judgments about pedagogical quality, opinions on best practices, or claims you can verify by executing code (use bash instead).\n\nKeep queries short and specific — 3-8 words targeting the exact claim. Do not search for broad topics.\n\nin the return value, you will get INSTRUCTIONS for the synthesis of the information. Use it to help you in synthesizing the data. the information in the 'INSTRUCTIONS_FOR_SYNTHESIS' section is not a part of the actual research.\n\nGood: 'python threading current_thread join deadlock'\nGood: 'JNI GetStringUTFChars return type'\nGood: '/usr directory name etymology linux'\nBad: 'how does JNI work in android'\nBad: 'python async vs threading explained'",
+                "parameters": {
+                        "type": "object",
+                        "properties": {
+                                "query": {
+                                        "type": "string",
+                                        "description": "Search query targeting a specific verifiable claim. 3-8 words."
+                                },
+                                "objective": {
+                                        "type": "string",
+                                        "description": "The main objective and facts you are looking for from the search. should be as verbose as possible to convey what information you need."
+                                }
+                        },
+                        "required": ["query", "objective"]
+                }
+        }
+}
