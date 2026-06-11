@@ -1,15 +1,13 @@
-# <span style="color:green">Local-LLM-Scaffolding</span>
+# Local-LLM-Scaffolding
 
-Disclaimer: This is a solo project and I'm not accepting pull requests or feature requests
-My Python-Based local LLM Scaffolding. Meant to be used as a testing ground for new ideas and getting the most out of smaller open models.
+> Disclaimer: This is a solo learning project, 
+> not ready for contributions yet.
 
-## Project Info
+This LLM Scaffolding project Is meant to be local-first, private, while also trying to achieve close to Anthropic and Openai class performance in web research, memory management, and tool use. This project also has the constraint of limiting myself to 16gb of vram (and 32gb of system ram). Making something powerful that can run on a majority of consumer gaming hardware.
 
-OS: Linux
-Language: Python
-LM Target: Model-agnostic
-GPU VRAM Limitation: 16G
-Testing LM: Qwen3.6 27B UD-IQ3_XXS (unsloth quant)
+## Current Status:
+[06/11/2026] - The main loop is functional, the web_fetch, web_search, and bash is functional. Chats are not saved. Streaming is off. Token overflow crashes the program.
+
 
 ## Usage:
 
@@ -17,14 +15,19 @@ Testing LM: Qwen3.6 27B UD-IQ3_XXS (unsloth quant)
 
 As of right now, there is no official UI, as i am trying to finalize the backend to get the loop to a stable and predictable state. The entry point for the program is:
 
-`src/local-llm-scaffolding/chatflow.py`
+`src/local_llm_scaffolding/main.py`
+
+### For Web Search
+You will need to setup a docker or podman instance of searxng running locally, currently it looks at `http://0.0.0.0:8888/`, with no exposed config for changing where it points yet.
 
 ### You will need to create/modify a few files to run successfully:
- * You'll need a memory file in `/src/local-llm-scaffolding/agent/` named `memory.md`.
+
+#### memory.md
+ * You'll need a memory file in `/src/local_llm_scaffolding/config/agent/` named `memory.md`.
     - This is a memory file injected raw into the system prompt, this will be depreciated in the future for a more dynamic memory system.
 
- * after first launch, a config file will be created with default parameters, alternatively, you *can* create one. it needs to be named `cfg.json` and located in `/src/local-llm-scaffolding/config/`. Heres a template:
-
+#### cfg.json
+ * after first launch, a config file will be created with default parameters, if one is not found. Here is an example of the config and the definitions if you would like to modify and test:
 ```json
 {
 "general": {
@@ -33,7 +36,7 @@ As of right now, there is no official UI, as i am trying to finalize the backend
     }, 
 "server": {
     "ip": "0.0.0.0", 
-    "port": "8090", 
+    "port": "8080", 
     "exec": "./llama/llama.cpp.sh", 
     "args": ["--models-preset", "llama/models/config.ini",
         "--models-max", "1", 
@@ -52,18 +55,30 @@ As of right now, there is no official UI, as i am trying to finalize the backend
 }
 ```
 
- - logger_config - Specifies the location of the logger configuration file. Leave as default.
- - user - The name the llm will refer to the user as.
- - ip - the ip used to communicate with the llama-server instance.
- - port - the port used to communicate with the llama-server instance.
- - exec - the location of the llama-server binary or launch script.
- - args - a list of arguments to be fed to llama-server. It will be used in a subprocess call, so keep that in mind when it comes to formatting.
- - system_prompt - Location of your system prompt file.
- - memory_file - Location of your memory file.
+ - logger_config: Specifies the location of the logger configuration file. Leave as default.
+ - user: The name the llm will refer to the user as.
+ - ip: the ip used to communicate with the llama-server instance.
+ - port: the port used to communicate with the llama-server instance.
+ - exec: the location of the llama-server binary or launch script.
+ - args: a list of arguments to be fed to llama-server. It will be used in a subprocess call, so keep that in mind when it comes to formatting.
+ - system_prompt: Location of your system prompt file.
+ - memory_file: Location of your memory file.
+
+#### Llama.cpp
+Inside the `llama/build/` directory, sits an `update.sh` script. This is meant to just build the llama.cpp llama-server binary and it's dependencies, move them to the `llama/build/bin` folder, and clean up the build files. This will be the binary that the program will use, but all thats needed is for you to build.
+> Comments have been added to the file to denote where you can modify build flags for your hardware configuration.
+
+#### Models
+Models need to be placed into the `llama/models/` directory. *I* am using the Qwen3.6/3.5 models, just because they seem more competant for tool calling, but realistically you can use whichever. just note that my prompts and tooling methods are tailored to those models.
+
+After copying the `.gguf` to the models folder, you need to modify the `llama/models/config.ini` with your model's preferred parameters. there are 4 model specs in there by default, it has not been added yet, but there's meant to be a thinking and non-thinking varient for a 'default' (main chat) model, and a 'mini' (tool-use/agentic) model.
+
+Currently it only uses the `default_thinking` model.
+
+If you wish for one model to share all tasks, just make the directories all point to the same model.
 
 ## TODO:
-- [ ] Fix imports and dependencies from switching to src project structure.
-- [ ] Logging consistancy.
-- [ ] Verify tool functionality.
-- [ ] Verify chat loop functionality.
-- [ ] Verify diagnostic functionality.
+ - [ ] Finish building the ContextManager class.
+ - [ ] Implement graceful token overflow handling.
+ - [ ] Build file_edit tool
+ - [ ] ...
