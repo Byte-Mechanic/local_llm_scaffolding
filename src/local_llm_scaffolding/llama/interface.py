@@ -36,6 +36,7 @@ class GenerationResult(TypedDict):
     reasoning: str
     finish_reason: Literal['stop', 'length', 'content_filter', 'null', 'tool']
     stats: dict
+    status: Literal['success', 'fail']
     tools: list|None
 
 class LlamaInterface:
@@ -170,49 +171,68 @@ class LlamaInterface:
             HTTPError: If the http request returns a 4xx or 5xx code
             KeyError: If the output from the llm does not match the expected schema
         """
-        try:
-            response = requests.post((f'http://{self.server}:{self.port}'
-                                      f'/v1/chat/completions'),
-                                     json={
-                                         'model': model,
-                                         'messages': context,
-                                         'tools': tools,
-                                         'cache_prompt': caching,
-                                         'parallel_tool_calls': True}
-                                     )
-            response.raise_for_status()
-        except:
-            r_json = response.json()
-            if 'error' in r_json:
-                logger.critical(f"Generation failed. "
-                                f"[{r_json['error']['code']}] - "
-                                f"{r_json['error']['message']}")
-            else:
-                logger.critical(f"Generation failed. Unexpected Response:\n"
-                                f"{json.dumps(r_json, indent=4)}")
-        try:
-            choice = response.json()['choices'][0]
-            message = choice['message']
-            gen = GenerationResult(
-                    role = message['role'],
-                    response = message['content'],
-                    reasoning = (message['reasoning_content']
-                                 if 'reasoning_content' in message else ''),
-                    finish_reason = choice['finish_reason'],
-                    stats = response.json()['usage'],
-                    tools = (message['tool_calls']
-                             if 'tool_calls' in message else None)
-                    )
-            logger.info(f'Response Generated:\n{gen}')
-            self.cur_model = model
-            return gen
-        except KeyError:
-            logger.critical('Unable to create [GenerationResult]. Detailed '
-                            'error below.'
-                            '\n--------\n'
-                            f'{traceback.format_exc()}'
-                            '\n--------\n'
-                            f'{json.dumps(response.json(), indent=4)}'
-                            '\n--------')
+        failed_generation = GenerationResult(
+                                role = '',
+                                response = '',
+                                reasoning = '',
+                                finish_reason = 'null',
+                                stats = {},
+                                status = 'fail',
+                                tools = None)
+        backoff = 1
+        while backoff <= 8:
+            try:
+                response = requests.post((f'http://{self.server}:{self.port}'
+                                          f'/v1/chat/completions'),
+                                         json={
+                                             'model': model,
+                                             'messages': context,
+                                             'tools': tools,
+                                             'cache_prompt': caching,
+                                             'parallel_tool_calls': True}
+                                         )
+                response.raise_for_status()
+            except requests.HTTPError:
+                r_json = response.json()
+                if response.status_code in [425, 502, 503, 504]:
+                    logger.info('Server responded with '
+                                '[{response.status_code}] Retrying...')
+                    time.sleep(backoff)
+                    backoff *= 2
+                    continue
+                else:
+                    if 'error' in r_json:
+                        logger.critical(f'Generation Failed. Unrecoverable. \n'
+                                        f'[{r_json["error"]["code"]}] - '
+                                        f'{r_json["error"]["message"]}\n'
+                                        f'Raw JSON: \n'
+                                        f'{json.dumps(r_json, indent=4)}')
+                    else:
+                        logger.critical(f'Generation Failed. Unrecoverable. \n'
+                                        f'Raw JSON:\n'
+                                        f'{json.dumps(r_json, indent=4)}')
+                    return failed_generation
+            try:
+                choice = response.json()['choices'][0]
+                message = choice['message']
+                gen = GenerationResult(
+                        role = message['role'],
+                        response = message['content'],
+                        reasoning = (message['reasoning_content']
+                                     if 'reasoning_content' in message else ''),
+                        finish_reason = choice['finish_reason'],
+                        stats = response.json()['usage'],
+                        status = 'success',
+                        tools = (message['tool_calls']
+                                 if 'tool_calls' in message else None)
+                        )
+                logger.info(f'Response Generated Successfully:\n{gen}')
+                self.cur_model = model
+                return gen
+            except KeyError:
+                logger.critical(f'Generation Failed. Response Schema Not Recognized:\n'
+                                f'Raw JSON:\n'
+                                f'{json.dumps(response.json(), indent=4)}')
+                return failed_generation
 
-
+                
