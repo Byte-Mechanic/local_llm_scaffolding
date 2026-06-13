@@ -19,8 +19,6 @@ import requests
 from typing import Literal, TypedDict
 import logging
 import traceback
-import re
-import subprocess
 import time
 import json
 
@@ -212,22 +210,5 @@ class LlamaInterface:
                             '\n--------\n'
                             f'{json.dumps(response.json(), indent=4)}'
                             '\n--------')
-
-    def tokenize_count(self, text: str) -> int:
-        """General token count on a peice of text
-
-        Args:
-            text (str): the input text to count
-
-        Returns:
-            int: the total token count of text
-        """
-        content_tokens = requests.post(
-                'http://{self.server}:{self.port}/tokenize',
-                json = {'content': text}
-                ).json()['tokens']
-        return len(content_tokens)
-
-
 
 
