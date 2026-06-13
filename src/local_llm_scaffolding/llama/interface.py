@@ -123,19 +123,23 @@ class LlamaInterface:
             if mod['status']['value'] == 'loaded':
                 props = mod['status']['preset'].split('\n')
                 prop_dict = {}
+                prop_dict['model'] = mod['id']
                 for prop in props:
                     if '=' not in prop:
                         continue
                     prop_split = prop.split('=')
+                    propk = prop_split[0].strip()
+                    propv = prop_split[1].strip()
                     try:
-                        prop_dict[prop_split[0]] = json.loads(prop_split[1])
+                        prop_dict[propk] = json.loads(propv)
                     except json.decoder.JSONDecodeError:
-                        prop_dict[prop_split[0]] = str(prop_split[1])
+                        prop_dict[propk] = str(propv)
                 logger.info(f'Requested model props:\n'
                             f'{json.dumps(prop_dict, indent=4)}')
+                return prop_dict
         else:
-            return
-    
+            return {'model': 'unloaded'}
+
     def chat_completions_streaming(self,
                                    context: list[dict],
                                    tools: list[dict],
