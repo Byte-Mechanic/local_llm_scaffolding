@@ -61,12 +61,23 @@ class Tools:
     def execute_tool(self, tool: dict):
         ## Add type checking for input validation
         if isinstance(tool, dict):
+            tool_result = {}
+            
             funct_name = tool['function']['name']
-            funct_args = json.loads(tool['function']['arguments'])
-            raw_tool_result = self.funct_map[funct_name](self.interfaces, **funct_args)
+            try:
+                funct_args = json.loads(tool['function']['arguments'])
+            except json.decoder.JSONDecodeError as e:
+                logger.error(f'Arguments could not be parsed by the JSON '
+                             f'decoder.\nJSON: {tool['function']['arguments']}'
+                             f'\nError: {e}')
+                funct_args = (f'Arguments could not be parsed by'
+                              f' JSON decoder. \nError: {e}')
+            raw_tool_result = self.funct_map[funct_name](self.interfaces, 
+                                                         **funct_args)
             tool_result = {'funct_name': funct_name,
                            'funct_args': funct_args,
                            'result': raw_tool_result}
+
             logger.info(f'Returning Tool Result:\n{json.dumps(tool_result, 
                         indent=4)}')
             return tool_result
