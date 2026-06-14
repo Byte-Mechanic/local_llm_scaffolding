@@ -18,14 +18,25 @@ logger.info(f'Logger "{logger.name}" Initiated.')
 
 file_path: pathlib.Path = pathlib.Path(__file__).resolve().parent
 
-config: ConfigManager = ConfigManager()
+###################################
+## MOVE TO CONTEXT-MANAGER CLASS ##
+###################################
 
-user: str = config.general_user
-sys_prompt_path: pathlib.Path = file_path.joinpath(config.agent_system_prompt)
-sys_memory_path: pathlib.Path = file_path.joinpath(config.agent_memory_file)
+#user: str = config.general_user
+#sys_prompt_path: pathlib.Path = file_path.joinpath(config.agent_system_prompt)
+#sys_memory_path: pathlib.Path = file_path.joinpath(config.agent_memory_file)
 
+###################################
+###################################
+###################################
 
-def turn(main_agent: Agent, context: ContextManager, msg: str) -> None:
+class SharedInterfaces:
+    def __init__(self, llama_manager, config_manager):
+        self.config_manager: ConfigManager = config_manager
+        self.llama_interface: LlamaInterface = LlamaInterface(self.config_manager,
+                                                              llama_manager)
+
+def turn(main_agent: Agent, msg: str) -> None:
     """Manages the flow of a chat turn."""
 
     logger.info(f'USER INPUT: "{msg}"')
@@ -51,41 +62,41 @@ def turn(main_agent: Agent, context: ContextManager, msg: str) -> None:
     #  Print assistant message, add response to context.
     print(f'ASSISTANT:\n{response["response"]}')
     main_agent.add_assistant_msg(response)
-    print(f'[{context.ctx_tokens_used}]')
 
 def run():
     #  Clear Screen.
     print('\x1B[2J'.encode('utf-8').decode('unicode-escape'))
     #  Start context manager loop
     #  Starts server, defines main agent, starts main chat loop.
+    config = ConfigManager()
     with LlamaManager(config) as llama_server: 
-        llama = LlamaInterface(config, llama_server)
-        context = ContextManager(llama)
-        tools = Tools(llama, context)
+        ########################################################
+        ## WILL REMOVE BELOW AND ADD TO CONTEXT-MANAGER CLASS ##
+        ########################################################
         #  Load Memory Document
-        with open(sys_memory_path, 'r') as doc:
-            system_memory: str = doc.read()
-
+        #with open(sys_memory_path, 'r') as doc:
+        #    system_memory: str = doc.read()
+        #
         #  Load System Prompt and make the necessary substitutions, injecting
         #  the memory document, current date, and the user name.
-        with open(sys_prompt_path, 'r') as doc:
-            system_prompt: str = doc.read()
-            cur_date: str = datetime.datetime.strftime(datetime.datetime.now(), 
-                                                  '%A %B %d, %Y. %I:%M %p')
-            system_prompt = system_prompt.replace('$DATE', cur_date)
-            system_prompt = system_prompt.replace('$MEMORY', system_memory)
-            system_prompt = system_prompt.replace('$USER', user)
-            tool_instruct_buffer = ''
-            for instruct in tools.system_prompt_injections:
-                tool_instruct_buffer += f'\n{instruct}'
-            system_prompt = system_prompt.replace('$TOOLS', tool_instruct_buffer)
-
+        #with open(sys_prompt_path, 'r') as doc:
+        #    system_prompt: str = doc.read()
+        #    cur_date: str = datetime.datetime.strftime(datetime.datetime.now(), 
+        #                                          '%A %B %d, %Y. %I:%M %p')
+        #    system_prompt = system_prompt.replace('$DATE', cur_date)
+        #    system_prompt = system_prompt.replace('$MEMORY', system_memory)
+        #    system_prompt = system_prompt.replace('$USER', user)
+        #    tool_instruct_buffer = ''
+        #    for instruct in tools.system_prompt_injections:
+        #        tool_instruct_buffer += f'\n{instruct}'
+        #    system_prompt = system_prompt.replace('$TOOLS', tool_instruct_buffer)
+        ########################################################
+        ########################################################
+        ########################################################
+        shared_interfaces = SharedInterfaces(llama_server, config)
         main_agent = Agent(
-                system_prompt = system_prompt,
-                model = 'Local',
-                tool_handler = tools,
-                llama_interface=llama,
-                context_manager = context)
+                shared_interfaces,
+                model = 'default_thinking')
         while True:
-            turn(main_agent, context, input('--> '))
+            turn(main_agent, input('--> '))
 

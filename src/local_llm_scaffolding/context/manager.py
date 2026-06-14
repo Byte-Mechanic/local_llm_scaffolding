@@ -12,9 +12,11 @@ logger.info(f'Logger {logger.name} Initiated.')
 class ContextManager:
     def __init__(self, llama_interface: LlamaInterface, context: list|None = None):
         if context:
-            self.full_context: list = context
+            self.full_context: list[dict] = context
         else:
-            self.full_context: list = []
+            self.full_context: list[dict] = [] ### Add preconfig Sys-prompt-
+                                               ### Here
+
         self.llama_interface: LlamaInterface = llama_interface
         self.working_context: list = []
         self.ctx_token_limit: int = 0

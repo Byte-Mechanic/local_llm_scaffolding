@@ -1,6 +1,9 @@
 # Copyright (c) 2026 Byte-Mechanic
 # SPDX-License-Identifier: MIT
 
+from ..context.manager import ContextManager
+from ..llama.interface import LlamaInterface
+
 import pathlib
 import json
 import sys
@@ -9,17 +12,19 @@ import logging
 logger = logging.getLogger(__name__)
 logger.info(f'Logger "{logger.name}" Initiated.')
 
-############################################
-## CURRENTLY WORKING ON GET_TOOL_SCHEMA() ####
-################################################
 
 class Tools:
-    def __init__(self, llama_interface, context):
-        self.interfaces = {'llama': llama_interface,
-                           'context': context}
+    def __init__(self, llama_interface, context_manager):
+        
+        # Interfaces
+        self.interfaces = {'llama':llama_interface,
+                           'context':context_manager}
+        
+        # Init vars for tools loaded below.
         self.tool_definitions: list = []
         self.funct_map: dict = {}
         self.system_prompt_injections: list = []
+
         self.ignore_files: list = ['__pycache__', '__init__.py', 'handler.py', 
                                    'utils.py', 'tool_log.log']
         for tool_dir in (pathlib.Path(__file__).parent.resolve().iterdir()): #Add to config

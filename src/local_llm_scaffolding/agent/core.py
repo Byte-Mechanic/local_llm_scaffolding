@@ -13,20 +13,18 @@ print(__name__)
 
 
 class Agent:
-    def __init__(self,  
-                 tool_handler: Tools,
-                 context_manager: ContextManager,
-                 llama_interface: LlamaInterface,
-                 system_prompt: str|None = None, 
-                 model: str = 'unkn'
-                 ) -> None:
+    def __init__(self, shared_interfaces, model: str|None = None) -> None:
+        
         self.model: str = model
-        self.tools: Tools|None = tool_handler
-        self.llama_interface: LlamaInterface = llama_interface
-        self.context_manager: ContextManager = context_manager
-        if system_prompt:
-            self.context_manager.full_context.append({'role':'system',
-                                                    'content':system_prompt})
+        
+        self.config_manager: ConfigManager = shared_interfaces.config_manager
+        self.llama_interface: LlamaInterface = shared_interfaces.llama_interface
+
+        self.context_manager: ContextManager = ContextManager(self.llama_interface)
+        self.tools: Tools = Tools(self.llama_interface, self.context_manager)
+        
+        self.llama_interface.default_model = model
+
     def add_assistant_msg(self, msg: GenerationResult) -> None:
         self.context_manager.add_assistant_msg(msg)
     def add_user_msg(self, msg) -> None:
@@ -36,9 +34,17 @@ class Agent:
     def generate_local(self) -> GenerationResult:
         logger.info(f'Sending message context:\n'
                     f'{json.dumps(self.context_manager.working_context, indent=4)}')
+        if self.model:
+            mod = self.model
+        else:
+            mod = self.llama_interface.models[1]
         generation = self.llama_interface.chat_completions(
-            model=self.llama_interface.models[1],
-            context=self.context_manager.working_context,
-            tools=self.tools.tool_definitions if self.tools else None)
-        logger.info(f'Returning Generation Result:\n{json.dumps(generation, indent=4)}')
-        return generation        
+                model=mod,
+                context=self.context_manager.working_context,
+                tools=self.tools.tool_definitions if self.tools else None)
+        if 'length' in generation['finish_reason']:
+            self.context_manager.compact_context()
+            return self.generate_local()
+        else:
+            logger.info(f'Returning Generation Result:\n{json.dumps(generation, indent=4)}')
+            return generation        
