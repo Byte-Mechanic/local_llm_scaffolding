@@ -64,7 +64,7 @@ class LlamaInterface:
                 break
         else:
             raise TimeoutError('Could not generate LLM model map.')
-        self.cur_model: str = ''
+        self.default_model: str = ''
     
     def _generate_model_list(self) -> list:
         """Generates a list of the models specified in the server config"""
@@ -91,7 +91,7 @@ class LlamaInterface:
         """
         response = requests.post((f'http://{self.server}:{self.port}'
                                   f'/v1/messages/count_tokens'),
-                                 json={'model':self.cur_model,
+                                 json={'model':self.default_model,
                                      'messages':context})
         response.raise_for_status()
         return int(response.json()['input_tokens'])
@@ -107,7 +107,7 @@ class LlamaInterface:
         """
         response = requests.post((f'http://{self.server}:{self.port}'
                                  f'/tokenize'),
-                                 json={'model':self.cur_model,
+                                 json={'model':self.default_model,
                                        'content':content})
         response.raise_for_status()
         return len(response.json()['tokens'])
@@ -181,16 +181,16 @@ class LlamaInterface:
                                 tools = None)
         backoff = 1
         while backoff <= 8:
-            try:
-                response = requests.post((f'http://{self.server}:{self.port}'
-                                          f'/v1/chat/completions'),
-                                         json={
-                                             'model': model,
-                                             'messages': context,
-                                             'tools': tools,
-                                             'cache_prompt': caching,
-                                             'parallel_tool_calls': True}
+            response = requests.post((f'http://{self.server}:{self.port}'
+                                      f'/v1/chat/completions'),
+                                     json={
+                                         'model': model,
+                                         'messages': context,
+                                         'tools': tools,
+                                         'cache_prompt': caching,
+                                         'parallel_tool_calls': True}
                                          )
+            try:
                 response.raise_for_status()
             except requests.HTTPError:
                 r_json = response.json()
@@ -227,12 +227,12 @@ class LlamaInterface:
                                  if 'tool_calls' in message else None)
                         )
                 logger.info(f'Response Generated Successfully:\n{gen}')
-                self.cur_model = model
                 return gen
             except KeyError:
                 logger.critical(f'Generation Failed. Response Schema Not Recognized:\n'
                                 f'Raw JSON:\n'
                                 f'{json.dumps(response.json(), indent=4)}')
                 return failed_generation
+        return failed_generation
 
                 
