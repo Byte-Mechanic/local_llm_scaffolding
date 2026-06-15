@@ -56,10 +56,15 @@ class Tools:
                 if tool_name in self.funct_map:
                     del self.funct_map[tool_name]
                 del tool_module
-
+        self.send_instructions_to_context_mgr()
     def _load_tool_modules(self, int_name: str, path: pathlib.Path):
         module = importlib.import_module(f".{int_name}.tool", package=__package__)
         return module
+    def send_instructions_to_context_mgr(self) -> None:
+        if len(self.system_prompt_injections) >= 1:
+            self.interfaces['context'].tool_instructions = (
+                    self.system_prompt_injections)
+        self.interfaces['context'].build_sys_prompt()
     def update_tool_schema(self, path: pathlib.Path) -> dict:
         with open(path.joinpath('definition.json'), 'r') as doc:
             return json.loads(doc.read())

@@ -18,18 +18,6 @@ logger.info(f'Logger "{logger.name}" Initiated.')
 
 file_path: pathlib.Path = pathlib.Path(__file__).resolve().parent
 
-###################################
-## MOVE TO CONTEXT-MANAGER CLASS ##
-###################################
-
-#user: str = config.general_user
-#sys_prompt_path: pathlib.Path = file_path.joinpath(config.agent_system_prompt)
-#sys_memory_path: pathlib.Path = file_path.joinpath(config.agent_memory_file)
-
-###################################
-###################################
-###################################
-
 class SharedInterfaces:
     def __init__(self, llama_manager, config_manager):
         self.config_manager: ConfigManager = config_manager
@@ -70,29 +58,6 @@ def run():
     #  Starts server, defines main agent, starts main chat loop.
     config = ConfigManager()
     with LlamaManager(config) as llama_server: 
-        ########################################################
-        ## WILL REMOVE BELOW AND ADD TO CONTEXT-MANAGER CLASS ##
-        ########################################################
-        #  Load Memory Document
-        #with open(sys_memory_path, 'r') as doc:
-        #    system_memory: str = doc.read()
-        #
-        #  Load System Prompt and make the necessary substitutions, injecting
-        #  the memory document, current date, and the user name.
-        #with open(sys_prompt_path, 'r') as doc:
-        #    system_prompt: str = doc.read()
-        #    cur_date: str = datetime.datetime.strftime(datetime.datetime.now(), 
-        #                                          '%A %B %d, %Y. %I:%M %p')
-        #    system_prompt = system_prompt.replace('$DATE', cur_date)
-        #    system_prompt = system_prompt.replace('$MEMORY', system_memory)
-        #    system_prompt = system_prompt.replace('$USER', user)
-        #    tool_instruct_buffer = ''
-        #    for instruct in tools.system_prompt_injections:
-        #        tool_instruct_buffer += f'\n{instruct}'
-        #    system_prompt = system_prompt.replace('$TOOLS', tool_instruct_buffer)
-        ########################################################
-        ########################################################
-        ########################################################
         shared_interfaces = SharedInterfaces(llama_server, config)
         main_agent = Agent(
                 shared_interfaces,

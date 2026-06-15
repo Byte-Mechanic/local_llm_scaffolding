@@ -4,10 +4,18 @@
 import logging
 import json
 import copy
+import datetime
+import pathlib
 from ..llama.interface import LlamaInterface, GenerationResult
 
 logger = logging.getLogger(__name__)
 logger.info(f'Logger {logger.name} Initiated.')
+
+proj_root = pathlib.Path(__file__).resolve().parent.parent
+sys_prompt_file = 'config/agent/system_prompt.md' # get from config after config
+sys_memory_file = 'config/agent/memory.md'        # refactor
+user = 'user'
+
 
 class ContextManager:
     def __init__(self, llama_interface: LlamaInterface, context: list|None = None):
@@ -22,6 +30,33 @@ class ContextManager:
         self.ctx_token_limit: int = 0
         self.ctx_tokens_used: int = 0
         self.retain_reasoning: bool = True
+        self.tool_instructions = []
+        self.system_prompt = {'role':'system','content':''}
+    def build_sys_prompt(self) -> None:
+        # Load external files
+        with open(proj_root.joinpath(sys_prompt_file), 'r') as doc:
+            sys_prompt = doc.read()
+        with open(proj_root.joinpath(sys_memory_file), 'r') as doc:
+            sys_memory = doc.read()
+        tool_instruction_buff = ''
+        for instruction in self.tool_instructions:
+            tool_instruction_buff += f'\n{instruction}'
+        # Substitutions
+        datetime_now: str = datetime.datetime.strftime(datetime.datetime.now(),
+                                                       '%A %B %d, %Y. %I:%M%p')
+        sys_prompt = sys_prompt.replace('$DATE', datetime_now)
+        sys_prompt = sys_prompt.replace('$MEMORY', sys_memory)
+        sys_prompt = sys_prompt.replace('$USER', user)
+        sys_prompt = sys_prompt.replace('$TOOLS', tool_instruction_buff)
+        self.system_prompt['content'] = sys_prompt
+        for msg in self.full_context:
+            if 'role' not in msg:
+                continue
+            if msg['role'] is 'system':
+                msg['content'] = self.system_prompt
+        else:
+            self.full_context.insert(0, self.system_prompt)
+
     def add_user_msg(self, msg) -> None:
         message: dict = {'role': 'user',
                    'content': msg}
