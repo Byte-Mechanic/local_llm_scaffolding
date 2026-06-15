@@ -202,6 +202,12 @@ class LlamaInterface:
                     continue
                 else:
                     if 'error' in r_json:
+                        if 'exceed_context_size_error' in r_json['error']['type']:
+                            logger.info('Returned "exceed_context_size_error" '
+                                        'in server response. Attempting '
+                                        'compaction.')
+                            failed_generation['finish_reason'] = 'length'
+                            return failed_generation
                         logger.critical(f'Generation Failed. Unrecoverable. \n'
                                         f'[{r_json["error"]["code"]}] - '
                                         f'{r_json["error"]["message"]}\n'
