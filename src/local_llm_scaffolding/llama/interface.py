@@ -18,7 +18,6 @@ Example:
 import requests
 from typing import Literal, TypedDict
 import logging
-import traceback
 import time
 import json
 
@@ -93,7 +92,12 @@ class LlamaInterface:
                                   f'/v1/messages/count_tokens'),
                                  json={'model':self.default_model,
                                      'messages':context})
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except:
+            logger.error(f'Token count failed with status code '
+                         f'[{response.status_code}]:\n'
+                         f'{json.dumps(response.json(), indent=4)}')
         return int(response.json()['input_tokens'])
 
     def tokenize(self, content: str) -> int:
