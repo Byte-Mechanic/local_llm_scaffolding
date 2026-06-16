@@ -6,7 +6,7 @@
 Used as an interface for llama-server. Used for any interaction
 with the server.
 
-Example:
+Usage:
     >>> from llama.interface import LlamaInterface
     >>> interface = LlamaInterface(config, server_mgr)
     >>> interface.count_tokens(context)
@@ -66,7 +66,15 @@ class LlamaInterface:
         self.default_model: str = ''
     
     def _generate_model_list(self) -> list:
-        """Generates a list of the models specified in the server config"""
+        """Generates a list of models.
+
+        Generates a list of models specified in the server configuration file
+        using the /models endpoint
+
+        Raises:
+            requests.HTTPError:
+                upon any status code other than 200.
+        """
         raw_models = requests.get(f'http://{self.server}:{self.port}/models')
         raw_models.raise_for_status()
         models = [model['id'] for model in raw_models.json()['data']]
@@ -87,6 +95,10 @@ class LlamaInterface:
 
         Returns:
             int: the token count of the context provided
+
+        Raises:
+            requests.HTTPError:
+                upon any status code other than 200.
         """
         response = requests.post((f'http://{self.server}:{self.port}'
                                   f'/v1/messages/count_tokens'),
@@ -103,11 +115,17 @@ class LlamaInterface:
     def tokenize(self, content: str) -> int:
         """Counts the tokens in a string of text.
 
+        Counts the tokens in a string of text using llama's /tokenize endpoint.
+
         Args:
             content (str): The string of text to be evaluated
 
         Returns:
             int: the token count of the content provided.
+
+        Raises:
+            requests.HTTPError:
+                upon any status code other than 200.
         """
         response = requests.post((f'http://{self.server}:{self.port}'
                                  f'/tokenize'),
@@ -119,8 +137,15 @@ class LlamaInterface:
     def get_props(self):
         """Get the full properties of the model that is loaded.
 
+        Enumerates the full model list, pulls the presets from the model spec
+        that's loaded, and converts the text into a dict.
+
         Returns:
             dict: server properties
+
+        Raises:
+            requests.HTTPError:
+                upon any status code other than 200.
         """
         models = requests.get(f'http://{self.server}:{self.port}/models')
         models.raise_for_status()
@@ -149,7 +174,18 @@ class LlamaInterface:
                                    context: list[dict],
                                    tools: list[dict],
                                    thinking: bool) -> None:
-        ### Work In Progress, dont mind me
+        """A stub method
+
+        A stub method for streaming output.
+
+        Args:
+            context: 
+                context of the conversation.
+            tools: 
+                llm tool definitions (OpenAI Schema).
+            thinking: 
+                Thinking toggle for the model.
+        """
         pass
 
     def chat_completions(self,
@@ -163,17 +199,24 @@ class LlamaInterface:
         tools, and model
 
         Args:
-            model (str): Model name (usually using the index from the model list)
-            context (list[dict]): context of the conversation
-            tools (list[dict]): llm tool definitions (OpenAI Schema)
-            Caching (bool): Whether to keep the generation cache or not
+            model: 
+                Model name (usually using the index from the model list)
+            context: 
+                context of the conversation
+            tools: 
+                llm tool definitions (OpenAI Schema)
+            Caching: 
+                Whether to keep the generation cache or not
 
         Returns:
-            GenerationResult: the full generated response from the llm
+            GenerationResult: 
+                the full generated response from the llm
 
         Raises:
-            HTTPError: If the http request returns a 4xx or 5xx code
-            KeyError: If the output from the llm does not match the expected schema
+            HTTPError: 
+                If the http request returns a 4xx or 5xx code
+            KeyError: 
+                If the output from the llm does not match the expected schema
         """
         failed_generation = GenerationResult(
                                 role = '',

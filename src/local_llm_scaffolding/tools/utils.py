@@ -1,6 +1,13 @@
 # Copyright (c) 2026 Byte-Mechanic
 # SPDX-License-Identifier: MIT
 
+"""This file contains utility functions for tools to call.
+
+This file has multiple utility functions that serve a basic purpose and can be
+used by each plugin instead of tools having to rely on other tools existing in
+order to function.
+"""
+
 import logging
 from fake_useragent import UserAgent
 import markdownify

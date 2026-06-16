@@ -1,6 +1,14 @@
 # Copyright (c) 2026 Byte-Mechanic
 # SPDX-License-Identifier: MIT
 
+"""Default plugin "Bash" for agent
+
+This module is imported by the Tools class automatically. It gives the agent
+the ability to execute basic bash commands, and certain python code within a
+'bwrap' sandboxed environment.
+
+"""
+
 from pathlib import Path
 import subprocess
 import logging

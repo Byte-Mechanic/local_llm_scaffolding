@@ -1,6 +1,17 @@
 # Copyright (c) 2026 Byte-Mechanic
 # SPDX-License-Identifier: MIT
 
+"""Manages a specific agent's context.
+
+This module manages a specific agent instances' context, exposing an interface
+for adding assistant, user, and tool messages as well as exposing functions to
+compress or 'compact' the context when it hits a limit.
+
+Usage:
+    >>> context = ContextManager(llama_interface, context_prefix)
+    >>> context.add_user_msg(input("--> "))
+"""
+
 import logging
 import json
 import copy
@@ -20,13 +31,24 @@ user = 'user'
 log_wd = 120
 
 class ContextManager:
+    """A single agent's context"""
+
     def __init__(self, llama_interface: LlamaInterface, context: list|None = None):
+        """Initializes a single agent's context.
+
+        Sets up the context with predefined variables probed by other parts of
+        the program. Takes in a starting context for added flexibility.
+
+        Args:
+            context:
+                Optional starting context, structured in the typical OAI [{'role',
+                'content':}] schema
+        """
         if context:
             self.full_context: list[dict] = context
         else:
             self.full_context: list[dict] = [] ### Add preconfig Sys-prompt-
                                                ### Here
-
         self.llama_interface: LlamaInterface = llama_interface
         self.working_context: list[dict] = copy.deepcopy(self.full_context)
         self.ctx_token_limit: int = 0
@@ -37,7 +59,14 @@ class ContextManager:
         self.system_prompt: dict = {'role':'system','content':''}
         logger.info(f'Logger initialized with context:\n'
                     f'{pprint.pformat(self.working_context, width=log_wd)}')
+
     def build_sys_prompt(self) -> None:
+        """Builds the system prompt.
+
+        Builds the system prompt by making the nessesary substitutions, adding
+        the tool instructions based on what's been loaded, and wraps it in the
+        message dict and adds to the contexts.
+        """
         # Load external files
         with open(proj_root.joinpath(sys_prompt_file), 'r') as doc:
             sys_prompt = doc.read()
@@ -66,6 +95,12 @@ class ContextManager:
                     f'{pprint.pformat(self.system_prompt, width=log_wd)}')
 
     def add_user_msg(self, msg) -> None:
+        """Adds a 'user' message to the context
+
+        Args:
+            msg:
+                The string sent by the user.
+        """
         message: dict = {'role': 'user',
                    'content': msg}
         logger.info(f'Adding User Message:\n'
@@ -73,7 +108,15 @@ class ContextManager:
         self.full_context.append(message)
         self.working_context.append(message)
         self.post_add()
+
     def add_assistant_msg(self, msg: GenerationResult) -> None:
+        """Adds an 'assistant' message to the context
+
+        Args:
+            msg:
+                The resulting GenerationResult from the call to LlamaManager's
+                generate_local.
+        """
         message: dict = {'content': msg['response'],
                                'role': msg['role']}
         if msg['tools']:
@@ -85,7 +128,16 @@ class ContextManager:
         self.full_context.append(message)
         self.working_context.append(message)
         self.post_add()
+
     def add_tool_msg(self, tool, tool_result):
+        """Adds a 'tool' message to the context.
+
+        Args:
+            tool:
+                the raw tool information sent when the model requested the call.
+            tool_result:
+                The raw tool result from execution.
+        """
         message: dict = {'role': 'tool',
                          'tool_call_id': tool['id'],
                          'content': (json.dumps(tool_result)
@@ -96,14 +148,24 @@ class ContextManager:
         self.full_context.append(message)
         self.working_context.append(message)
         self.post_add()
+
     def post_add(self):
+        """A stub method for post-processing after message additions."""
         ## update ctx_tokens_used + ctx_tokens_limit, kick off compaction if 
         ## needed, and update the working_context
         logger.info(f'working_context Updated:\n'
                     f'{pprint.pformat(self.working_context, width=log_wd)}')
         if self.llama_interface.default_model != '':
             self.ctx_tokens_used = self.llama_interface.count_tokens(self.working_context)
+
     def compact_context(self) -> None:
+        """Compacts the context.
+
+        Separates the context into the current system prompt, and last 2
+        messages, compacts the rest in-between, then adds the message compaction
+        to the system prompt and reconstructs the message history into the
+        working_context. It also detects if compaction was previously performed.
+        """
         logger.info(f'Starting Context Compaction...')
         llama = self.llama_interface
         first_chunk = False
@@ -178,5 +240,6 @@ class ContextManager:
         logger.info(f'Compaction Complete [{before_tokens}->{after_tokens}]')
 
     def compact_tool_use(self):
+        """A stub method for compacting tool use specifically."""
         pass
 

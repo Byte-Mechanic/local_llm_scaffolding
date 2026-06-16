@@ -8,7 +8,7 @@ a llama-server instance. This should only be used once
 for the main loop. If multiple models are needed to be
 loaded in parallel, refer to the config manager.
 
-Example:
+Usage:
     >>> from llama.manager import LlamaManager
     >>> with LlamaManager(config) as llama_server:
     ... #Do work

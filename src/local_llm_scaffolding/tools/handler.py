@@ -1,6 +1,17 @@
 # Copyright (c) 2026 Byte-Mechanic
 # SPDX-License-Identifier: MIT
 
+"""Handles all tool related tasks for the agent.
+
+This module handles the loading of tool plugins upon initialization, preparing 
+tool instructions to be sent to the context manager, and tool calling.
+
+Usage:
+    >>> tools = Tools(llama_interface,
+    ...               context_manager)
+    >>> tools.execute_tool(<TOOL_JSON_FROM_MODEL_OUTPUT>)
+"""
+
 from ..context.manager import ContextManager
 from ..llama.interface import LlamaInterface
 

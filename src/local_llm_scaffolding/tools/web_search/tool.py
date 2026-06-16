@@ -1,6 +1,12 @@
 # Copyright (c) 2026 Byte-Mechanic
 # SPDX-License-Identifier: MIT
 
+"""This tool searches and returns web results
+
+This tool gives the model the ability to seach the web with a given 'query' and
+get back the top '3' links' converted to markdown.
+"""
+
 from ..utils import fetch_link_md
 import logging
 import requests

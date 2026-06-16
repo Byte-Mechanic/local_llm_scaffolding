@@ -1,6 +1,17 @@
 # Copyright (c) 2026 Byte-Mechanic
 # SPDX-License-Identifier: MIT
 
+"""Manages the program configuration.
+
+This module loads configs, creates configs when not present, and exposes them
+so other modules can access what they need.
+
+Usage:
+    >>> config = ConfigManager()
+    >>> # Access config:
+    >>> ip = config.server_ip
+"""
+
 import json
 import pathlib
 
@@ -8,7 +19,14 @@ file_path: pathlib.Path = pathlib.Path(__file__).resolve().parent
 pkg_root: pathlib.Path = file_path.parent
 
 class ConfigManager:
+    """Handles the program's configuration"""
+
     def __init__(self) -> None:
+        """Initializes a configuration.
+
+        Initializes a configuration instance. only one should exist in the
+        whole program.
+        """
         self.config_file: pathlib.Path = file_path.joinpath('cfg.json')
         if self.config_file.is_file() == False:
             with open(self.config_file, 'w') as doc:
@@ -47,6 +65,13 @@ class ConfigManager:
         with open(self.config_file, 'r') as config_file:
             self.load_config(json.loads(config_file.read()))
     def load_config(self, config_file):
+        """Loads the program's configuration from what was initialized.
+
+        Args:
+            config_file:
+                The configuration data loaded either from a file or from
+                defaults in the initialization.
+        """
         ## General
         general_config: dict = config_file['general']
         self.general_logger_config: pathlib.Path = general_config['logger_config']
