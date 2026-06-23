@@ -69,7 +69,8 @@ class Agent:
             tool_result: dict = self.tools.execute_tool(tool)
             self.context_manager.add_tool_msg(tool, tool_result['result'])
             print(f'\t\t\tRESULT:'
-                  f'\n\t\t\t[{json.dumps(tool_result, indent=4)}]')
+                  f'\n\t\t\t[{json.dumps(tool_result['result'], 
+                                            indent=4)[:50]}]...')
 
     def turn(self, msg):
         """Orchestrates the agent's turn.
