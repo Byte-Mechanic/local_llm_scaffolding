@@ -51,6 +51,7 @@ class Agent:
         self.context_manager: ContextManager = ContextManager(self.llama_interface)
         self.tools: Tools = Tools(self.llama_interface, self.context_manager)
         self.llama_interface.default_model = model
+        self.context_full_trigger:bool = False
 
     def handle_tools(self, tools: list[dict]) -> None:
         """Handles tool execution.
@@ -92,6 +93,9 @@ class Agent:
             print(f'\nASSISTANT:\n{response["response"]}')
             self.handle_tools(response['tools'])
             response = self.generate_local()
+        if self.context_full_trigger == True:
+            print('[ Context is full. Please start a new chat. ]')
+            return
         self.context_manager.add_assistant_msg(response)
         print(f'\nASSISTANT:\n{response["response"]}')
 
@@ -135,6 +139,9 @@ class Agent:
                 context=self.context_manager.working_context,
                 tools=self.tools.tool_definitions if self.tools else None)
         if 'length' in generation['finish_reason']:
+            if self.context_full_trigger == True:
+                return generation
+            self.context_full_trigger = True
             self.context_manager.compact_context()
             return self.generate_local()
         else:
