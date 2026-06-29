@@ -17,8 +17,6 @@ from ..llama.interface import LlamaInterface
 
 import pathlib
 import json
-import sys
-import importlib.util
 import logging
 logger = logging.getLogger(__name__)
 logger.info(f'Logger "{logger.name}" Initiated.')
@@ -69,15 +67,14 @@ class Tools:
     def _load_tool_modules(self, int_name: str, path: pathlib.Path):
         module = importlib.import_module(f".{int_name}.tool", package=__package__)
         return module
+
     def send_instructions_to_context_mgr(self) -> None:
+        if not isinstance(self.system_prompt_injections, list):
+            raise TypeError
         if len(self.system_prompt_injections) >= 1:
             self.interfaces['context'].tool_instructions = (
                     self.system_prompt_injections)
-
         self.interfaces['context'].build_sys_prompt()
-    def update_tool_schema(self, path: pathlib.Path) -> dict:
-        with open(path.joinpath('definition.json'), 'r') as doc:
-            return json.loads(doc.read())
 
     def execute_tool(self, tool: dict):
         ## Validate input
