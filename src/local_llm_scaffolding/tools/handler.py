@@ -47,6 +47,7 @@ class Tools:
             tool_name = tool_dir.name
             if tool_name in self.ignore_files:
                 continue
+            # Check for tool file
             try:
                 tool_module = self._load_tool_modules(tool_name)
                 logger.info(f'"{tool_name}" found.')
@@ -59,6 +60,7 @@ class Tools:
                                f'Reason: Unexpected exception occured:\n'
                                f'{e}')
                 continue
+            # Check for run()
             try:
                 if not callable(tool_module.run):
                     raise AttributeError
@@ -68,6 +70,7 @@ class Tools:
                 logger.warning(f'Cannot load "{tool_name}" module.\n'
                                f'Reason: Module {tool_name} has no callable '
                                f'attribute "run".')
+            # Check definition.json
             try:
                 definition_path = tool_dir.joinpath('definition.json')
                 with open(definition_path, 'r') as doc:
@@ -89,6 +92,7 @@ class Tools:
                     del self.funct_map[tool_name]
                 logger.warning(f'"{tool_name}.run" Removed from funct_map')
                 continue
+            # Check system_prompt_injection.md
             try: 
                 sys_inject_path = tool_dir.joinpath('system_prompt_injection.md')
                 with open(sys_inject_path, 'r') as doc:
