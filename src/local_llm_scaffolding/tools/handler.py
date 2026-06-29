@@ -18,13 +18,22 @@ from ..llama.interface import LlamaInterface
 import pathlib
 import json
 import logging
+import importlib
+
 logger = logging.getLogger(__name__)
 logger.info(f'Logger "{logger.name}" Initiated.')
 
+tool_path = pathlib.Path(__file__).resolve().parent #Add to ConfigManager
 
 class Tools:
     def __init__(self, llama_interface, context_manager):
         # Interfaces
+        if not isinstance(llama_interface, LlamaInterface):
+            raise TypeError('Passed "llama_interface" is not of type '
+                            '"LlamaInterface"')
+        if not isinstance(context_manager, ContextManager):
+            raise TypeError('Passed "context_manager" is not of type '
+                            '"ContextManager"')
         self.interfaces = {'llama':llama_interface,
                            'context':context_manager}
         # Init vars for tools loaded below.
@@ -33,38 +42,64 @@ class Tools:
         self.system_prompt_injections: list = []
         self.ignore_files: list = ['__pycache__', '__init__.py', 'handler.py', 
                                    'utils.py', 'tool_log.log']
-        for tool_dir in (pathlib.Path(__file__).parent.resolve().iterdir()): #Add to config
+        for tool_dir in (tool_path.iterdir()):
             logger.info('Checking "{tool_dir}" for tools...')
             tool_name = tool_dir.name
             if tool_name in self.ignore_files:
                 continue
             try:
-                tool_module = self._load_tool_modules(tool_name, 
-                            tool_dir.joinpath('tool.py'))
-                logger.info(f'"{tool_name}" Found!')
+                tool_module = self._load_tool_modules(tool_name)
+                logger.info(f'"{tool_name}" found.')
+            except ModuleNotFoundError:
+                logger.warning(f'Cannot load "{tool_name}" module.\n'
+                               f'Reason: Module {tool_name} does not exist.')
+                continue
             except Exception as e:
-                logger.warning(f'Cannot load "{tool_name}" module.')
-                logger.warning(f'Load Failure Reason:\n{e}')
+                logger.warning(f'Cannot load "{tool_name}" module.\n'
+                               f'Reason: Unexpected exception occured:\n'
+                               f'{e}')
                 continue
             try:
+                if not callable(tool_module.run):
+                    raise AttributeError
                 self.funct_map[tool_name] = tool_module.run
-                logger.info(f'"{tool_name}" Loaded Successfully!')
+                logger.info(f'"{tool_name}.run" found. Added to funct_map.')
+            except AttributeError:
+                logger.warning(f'Cannot load "{tool_name}" module.\n'
+                               f'Reason: Module {tool_name} has no callable '
+                               f'attribute "run".')
+            try:
                 definition_path = tool_dir.joinpath('definition.json')
                 with open(definition_path, 'r') as doc:
                     self.tool_definitions.append(json.load(doc))
                     logger.info(f'"{tool_name}" Definitions Loaded!')
+            except FileNotFoundError:
+                logger.warning(f'Cannot load "{tool_name}" module.\n'
+                               f'Reason: "definition.json" not found in tool '
+                               f'directory.')
+                if tool_name in self.funct_map:
+                    del self.funct_map[tool_name]
+                logger.warning(f'"{tool_name}.run" Removed from funct_map')
+                continue
+            except json.decoder.JSONDecodeError:
+                logger.warning(f'Cannot load "{tool_name}" module.\n'
+                               f'Reason: "definition.json" cannot be decoded by'
+                               f' json lib.')
+                if tool_name in self.funct_map:
+                    del self.funct_map[tool_name]
+                logger.warning(f'"{tool_name}.run" Removed from funct_map')
+                continue
+            try: 
                 sys_inject_path = tool_dir.joinpath('system_prompt_injection.md')
                 with open(sys_inject_path, 'r') as doc:
                     self.system_prompt_injections.append(doc.read())
-            except Exception as e:
-                logger.warning(f'run() missing from "{tool_name}" module.')
-                logger.warning(f'Load Failure Reason:\n{e}')
-                if tool_name in self.funct_map:
-                    del self.funct_map[tool_name]
-                del tool_module
+            except FileNotFoundError:
+                logger.debug(f'"system_prompt_injection.md" not found in the'
+                             f' tool path. This file is recommended, but not'
+                             f' required.')
         self.send_instructions_to_context_mgr()
 
-    def _load_tool_modules(self, int_name: str, path: pathlib.Path):
+    def _load_tool_modules(self, int_name: str):
         module = importlib.import_module(f".{int_name}.tool", package=__package__)
         return module
 
