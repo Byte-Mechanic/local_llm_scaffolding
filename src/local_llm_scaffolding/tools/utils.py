@@ -15,6 +15,7 @@ from bs4 import BeautifulSoup
 import re
 import time
 import requests
+import pathlib
 
 logger = logging.getLogger(__name__)
 logger.info(f'Logger "{logger.name}" Initiated.')
@@ -71,4 +72,38 @@ def fetch_link_md(url: str) -> str:
         return str(markdown_page)
     logger.error(f'Webpage could not be reached after [{attempt}] retrys.')
     return f'Webpage could not be reached after [{attempt}] retrys.'
+
+
+def index_file(file_path: pathlib.Path) -> dict:
+    """ Transforms a file into a dict with the keys representing their line
+    numbers
+
+    Args:
+        file_path:
+            Path of the file to be indexed.
+
+    Returns:
+        dict:
+            The resulting dict of file contents with their line numbers.
+
+    Raises:
+        TypeError:
+            If the file is not of the expected type and cannot be recovered.
+        FileNotFoundError:
+            If the file path does not point to a valid file.
+    """
+    if not isinstance(file_path, pathlib.Path):
+        logger.error(f'File path is not of instance "pathlib.Path": TYPE:'
+                     f'{type(file_path)}')
+        raise TypeError
+    if not file_path.is_file():
+        logger.error(f'File path is not a valid file. Path: {file_path}')
+        raise FileNotFoundError
+    with open(file_path, 'r') as doc:
+        _file = doc.read()
+        _file_dict = {}
+        for idx, content in enumerate(_file.split('\n')):
+            _file_dict[idx] = content
+        return _file_dict
+        
 
