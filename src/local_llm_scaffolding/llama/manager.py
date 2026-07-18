@@ -72,7 +72,7 @@ class LlamaManager:
         while self._process.poll() == None:
             log_line = self._process.stdout.readline()
             with self._state_lock:
-                if f'router server is listening on http://{self.server_ip}:{self.server_port}' in log_line:
+                if f'listening on http://{self.server_ip}:{self.server_port}' in log_line:
                     self._server_is_ready = True
             logger.info(f'LLAMA_INSTANCE_STDOUT : \n{log_line.replace('\n', '')}')
         while self._process.poll() == 1:
