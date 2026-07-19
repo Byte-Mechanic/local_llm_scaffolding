@@ -6,8 +6,9 @@
 This LLM Scaffolding project Is meant to be local-first, private, while also trying to achieve close to Anthropic and Openai class performance in web research, memory management, and tool use. This project also has the constraint of limiting myself to 16gb of vram (and 32gb of system ram). Making something powerful that can run on a majority of consumer gaming hardware.
 
 ## Current Status:
-[06/11/2026] - The main loop is functional, the web_fetch, web_search, and bash is functional. Chats are not saved. Streaming is off. Token overflow crashes the program.
+[07/18/2026] - The main loop is functional, the web_fetch, web_search, and bash is functional. Chats are not saved. Streaming is off. Basic chat compaction is functional.
 
+For roadmap details, jump to the end of the readme.
 
 ## Usage:
 
@@ -77,8 +78,22 @@ Currently it only uses the `default_thinking` model.
 
 If you wish for one model to share all tasks, just make the directories all point to the same model.
 
-## TODO:
- - [ ] Finish building the ContextManager class.
- - [ ] Implement graceful token overflow handling.
- - [ ] Build file_edit tool
- - [ ] ...
+## TODO/Milestones:
+ - [ ] [by 07/21/26] Complete file_edit tool
+        - Experimenting with a new (to me) architecture for iteration, to be
+          extended to the web_search tool.
+ - [ ] [by 07/26/26] Optimize web_search tool
+        - web_search does not give the model a choice on what enters it's
+          context. This initial implementation was meant to be naive, but i'm
+          at the point where it needs to be expanded in order to keep context
+          tight.
+ - [ ] [by 07/27/26] Role-based colors
+        - For easy separation in the terminal, easier on the eyes and user
+          friendly.
+ - [ ] [by 08/10/26] Tests
+        - Need tests for sanity check. The program is getting large enough to
+          warrent the need for testing. The context manager is especially
+          important, i need to know that objects are being added to context
+          properly, and if related logic changes that it's working.
+
+ - [ ] []
